@@ -128,11 +128,7 @@ end
 end
 
 @testitem "Hessian of EnveloptNLPModel with NCL" tags=[:model, :hessian, :ncl] begin
-  using NCL,
-    NLPModels,
-    OptimizationProblems,
-    OptimizationProblems.ADNLPProblems,
-    ProximalOperators
+  using NCL, NLPModels, OptimizationProblems, OptimizationProblems.ADNLPProblems, ProximalOperators
   ncl_model = NCLModel(hs13())
   env_model = EnveloptNLPModel(ncl_model, NormL1(1.0))
   nvar = get_nvar(env_model)

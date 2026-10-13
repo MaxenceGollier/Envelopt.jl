@@ -23,11 +23,7 @@ end
   @test Envelopt.first_order(stats)
 end
 
-@testitem "R2N subsolver: envelopt solve" setup=[R2NHelpers] tags=[
-  :solver,
-  :unconstrained,
-  :r2n,
-] begin
+@testitem "R2N subsolver: envelopt solve" setup=[R2NHelpers] tags=[:solver, :unconstrained, :r2n] begin
   using NLPModels, ProximalOperators, RegularizedOptimization, RegularizedProblems
   for hessian_approximation in (:exact_f, :lbfgs, :lsr1)
     env_model = EnveloptNLPModel(R2NHelpers.soft_threshold_model(), NormL1(R2NHelpers.β))
