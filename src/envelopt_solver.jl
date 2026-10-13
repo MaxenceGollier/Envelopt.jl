@@ -5,6 +5,11 @@ abstract type AbstractEnveloptSubSolver end
 name(sub::AbstractEnveloptSubSolver) = sub.name
 failed(stats::GenericExecutionStats) = stats.status != :first_order
 first_order(stats::GenericExecutionStats) = stats.status == :first_order
+
+# Value of the nonsmooth regularizer handled by the subproblem solver, if any.
+# Subproblem solvers for smooth subproblems have none.
+regularizer_value(sub::AbstractEnveloptSubSolver, x::AbstractVector) = zero(eltype(x))
+
 include("ipopt_sub.jl")
 include("madnlp_sub.jl")
 include("trunk_sub.jl")
@@ -188,7 +193,7 @@ function envelopt(
 
   fx = obj(env_model.model, stats.solution)
   hu = env_model.h(u)
-  stats.objective = fx + hu
+  stats.objective = fx + hu + regularizer_value(subsolver, stats.solution)
   stats.iter = tot_iter
 
   # TODO: return u in stats?
