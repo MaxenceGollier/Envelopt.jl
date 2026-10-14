@@ -23,7 +23,7 @@ include("remove_eqs.jl")
 include("penalty.jl")
 
 # Extensions
-export KnitroEnveloptSubSolver, R2NEnveloptSubSolver
+export KnitroEnveloptSubSolver, R2NEnveloptSubSolver, R2EnveloptSubSolver
 
 function KnitroEnveloptSubSolver(args...; kwargs...)
   error(
@@ -67,6 +67,32 @@ e.g., `max_iter`, `verbose` or `σmin`.
 function R2NEnveloptSubSolver(args...; kwargs...)
   error(
     "R2N support is not loaded. Install and load RegularizedOptimization.jl and RegularizedProblems.jl to use R2NEnveloptSubSolver.",
+  )
+end
+
+"""
+    R2EnveloptSubSolver(env_model::EnveloptNLPModel, regularizer; kwargs...)
+
+An Envelopt subproblem solver based on R2 from RegularizedOptimization.jl,
+a first-order quadratic regularization method that only uses the objective and gradient
+of `env_model`.
+It solves the same problems and subproblems as [`R2NEnveloptSubSolver`](@ref),
+under the same assumptions.
+
+This solver is defined in an extension: load RegularizedOptimization.jl and
+RegularizedProblems.jl to use it.
+
+## Keyword arguments
+
+* `m_monotone::Int = 6`: passed to `R2Solver`; R2 is non-monotone if `m_monotone > 1`;
+* `selected = 1:nvar`: the variables to which `regularizer` applies.
+
+Any other keyword argument is passed to R2 at each subproblem solve,
+e.g., `max_iter`, `verbose` or `σmin`.
+"""
+function R2EnveloptSubSolver(args...; kwargs...)
+  error(
+    "R2 support is not loaded. Install and load RegularizedOptimization.jl and RegularizedProblems.jl to use R2EnveloptSubSolver.",
   )
 end
 
