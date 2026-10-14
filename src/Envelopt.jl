@@ -84,7 +84,6 @@ RegularizedProblems.jl to use it.
 
 ## Keyword arguments
 
-* `m_monotone::Int = 6`: passed to `R2Solver`; R2 is non-monotone if `m_monotone > 1`;
 * `selected = 1:nvar`: the variables to which `regularizer` applies.
 
 Any other keyword argument is passed to R2 at each subproblem solve,
