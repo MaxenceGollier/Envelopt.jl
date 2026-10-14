@@ -1,4 +1,8 @@
-@testitem "R2 subsolver: single subproblem solve" setup=[R2NHelpers] tags=[:solver, :unconstrained, :r2] begin
+@testitem "R2 subsolver: single subproblem solve" setup=[R2NHelpers] tags=[
+  :solver,
+  :unconstrained,
+  :r2,
+] begin
   using NLPModels, ProximalOperators, RegularizedOptimization, RegularizedProblems
   env_model = EnveloptNLPModel(R2NHelpers.soft_threshold_model(), NormL1(R2NHelpers.β))
   r2_solver = R2EnveloptSubSolver(env_model, NormL1(R2NHelpers.λ))
