@@ -7,7 +7,6 @@ using Printf
 using ProximalOperators
 
 using ADNLPModels
-using JSOSolvers
 using LinearOperators
 using NCL
 using NLPModels
