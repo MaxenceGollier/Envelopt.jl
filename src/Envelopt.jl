@@ -6,13 +6,13 @@ using Printf
 
 using ProximalOperators
 
-using ADNLPModels
 using LinearOperators
 using NCL
 using NLPModels
 using NLPModelsModifiers
 using SolverCore
 
+include("F_model.jl")
 include("envelopt_model.jl")
 include("envelopt_solver.jl")
 

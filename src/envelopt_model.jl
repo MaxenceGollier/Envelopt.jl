@@ -127,8 +127,7 @@ end
 
 # By default, F(x) = x.
 function EnveloptNLPModel(model::M, h::H; kwargs...) where {T, S, M <: AbstractNLPModel{T, S}, H}
-  z = fill!(similar(get_x0(model)), zero(T))
-  Fmodel = ADNLPModel(x -> zero(T), z, z, z, x -> x, z, z)
+  Fmodel = IdentityFModel(get_x0(model), get_nvar(model))  # min 0 s.t. F(x) = x = 0
   EnveloptNLPModel(model, Fmodel, h; kwargs...)
 end
 
@@ -138,11 +137,8 @@ function EnveloptNLPModel(
   h::H;
   kwargs...,
 ) where {T, S, M <: AbstractNLPModel{T, S}, H}
-  nvar = get_nvar(model)
   nx = model.nx
-  zvar = zeros(nvar)
-  zcon = zeros(nx)
-  Fmodel = ADNLPModel(x -> 0.0, zvar, zvar, zvar, x -> x[1:nx], zcon, zcon)  # min_{x,r} 0  s.t. x = 0.
+  Fmodel = IdentityFModel(get_x0(model), nx)  # min_{x,r} 0  s.t. F(x, r) = x = 0.
   EnveloptNLPModel(model, Fmodel, h; kwargs...)
 end
 
