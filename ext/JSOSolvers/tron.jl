@@ -1,5 +1,3 @@
-export TronEnveloptSubSolver
-
 # TRON subproblem solver
 mutable struct TronEnveloptSubSolver <: AbstractEnveloptSubSolver
   solver::TronSolver

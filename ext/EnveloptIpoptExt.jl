@@ -1,5 +1,6 @@
-export IPOPTEnveloptSubSolver
+module EnveloptIpoptExt
 
+using Envelopt, NLPModels, SolverCore
 using NLPModelsIpopt
 
 # IPOPT subproblem solver
@@ -76,4 +77,6 @@ function (sub::IPOPTEnveloptSubSolver)(
     ipopt_fixed_options...,
     kwargs...,
   )
+end
+
 end

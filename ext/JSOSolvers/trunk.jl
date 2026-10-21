@@ -1,7 +1,3 @@
-export TrunkEnveloptSubSolver
-
-using JSOSolvers, SolverCore
-
 # Trunk subproblem solver
 mutable struct TrunkEnveloptSubSolver <: AbstractEnveloptSubSolver
   solver::TrunkSolver
