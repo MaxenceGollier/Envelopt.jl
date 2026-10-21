@@ -4,14 +4,14 @@ using Envelopt, NLPModels, SolverCore
 using NLPModelsIpopt
 
 # IPOPT subproblem solver
-mutable struct IPOPTEnveloptSubSolver <: AbstractEnveloptSubSolver
+mutable struct IPOPTEnveloptSubSolver <: Envelopt.AbstractEnveloptSubSolver
   solver::IpoptSolver
   stats::GenericExecutionStats
   name::String
 end
 
 # ... constructor
-function IPOPTEnveloptSubSolver(env_model::EnveloptNLPModel)
+function Envelopt.IPOPTEnveloptSubSolver(env_model::EnveloptNLPModel)
   @debug "initializing IPOPT subproblem solver"
   solver = IpoptSolver(env_model)
   stats = GenericExecutionStats(env_model)
