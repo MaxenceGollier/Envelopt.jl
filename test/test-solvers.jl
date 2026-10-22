@@ -152,7 +152,7 @@ end
 end
 
 @testitem "solve! with a preallocated EnveloptSolver" tags=[:solver, :unconstrained, :madnlp] begin
-  using ADNLPModels, ProximalOperators, SolverCore
+  using ADNLPModels, NLPModels, ProximalOperators, SolverCore
   model = ADNLPModel(x -> (x[1] - 1.0)^2 + 100 * (x[2] - x[1]^2)^2, [-1.2; 1.0])
   h = NormL1(1.0)
   env_model = EnveloptNLPModel(model, h)  # F(x) = x and μ = 1 by default
