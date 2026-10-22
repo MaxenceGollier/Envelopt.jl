@@ -41,7 +41,8 @@ where h_μ is the Moreau envelope of h with parameter μ > 0.
   If argument `F` is omitted, it will be defined implictly as the identity mapping, i.e., F(x) = x,
   or, in the case of `NCLModel`s, F(x, r) = x.
 
-* `h`: a proper, closed, convex function from ProximalOperators.jl.
+* `h`: a proper, closed, convex function implementing `ProximalCore.prox!(y, h, x, γ)` (returning `h(y)`)
+  and callable as `h(x)`, e.g., any function from ProximalOperators.jl.
 
 ## Optional arguments
 
@@ -58,12 +59,11 @@ mutable struct EnveloptNLPModel{
   meta::META
   model::NLP  # min f(x)  s.t. c(x) ∈ C
   F::FMODEL   # should be given as  min 0  s.t. F(x) = 0 because we need the Jacobian of F
-  h::H        # an operator from ProximalOperators.jl
-  envelope::MoreauEnvelope{T, H}  # FIXME: allocates; implement our own?
+  h::H        # a proximable function, see ProximalCore.jl
+  envelope::MoreauEnvelope{T, H, S}  # non-allocating Moreau envelope of h
   μ::T
   y::S
   Fμy::S   # temporary storage
-  ph::S    # temporary storage
   jtFv::S  # temporary storage for the gradient of the Moreau envelope term, i.e., ∇F(x)' * Fμy
 end
 
@@ -77,10 +77,9 @@ function EnveloptNLPModel(
   get_nvar(model) == get_nvar(F) || error("number of variables in model and F must match")
   μ > 0 || error("penalty parameter must be > 0")
   get_ncon(F) > 0 || error("F model must have constraints")
-  envelope = MoreauEnvelope(h, μ)
   y = fill!(similar(model.meta.x0, get_ncon(F)), zero(T))
+  envelope = MoreauEnvelope(h, μ, y)
   Fμy = similar(y)
-  ph = similar(y)
   jtFv = similar(y, get_nvar(model))
 
   meta = NLPModelMeta(
@@ -120,7 +119,6 @@ function EnveloptNLPModel(
     μ,
     y,
     Fμy,
-    ph,
     jtFv,
   )
 end
@@ -174,7 +172,7 @@ function set_penalty!(
 ) where {T, S, META, NLP, FMODEL, H}
   μ > 0 || error("penalty parameter must be > 0")
   model.μ = μ
-  model.envelope = MoreauEnvelope(model.h, μ)
+  model.envelope.μ = μ
   return model
 end
 
@@ -212,28 +210,21 @@ NLPModels.grad!(model::EnveloptNLPModel, x::AbstractVector, g::AbstractVector) =
   grad!(model.model, x, g)
   eval_F!(model, x, model.Fμy)  # Fμy <- F(x)
   @. model.Fμy += model.μ * model.y
-  prox!(model.ph, model.h, model.Fμy, model.μ)
-  model.Fμy .-= model.ph
-  model.Fμy ./= model.μ
-  jtprod!(model.F, x, model.Fμy, model.jtFv)  # jtFv <- ∇F(x)' * Fμy = gradient of h_μ at F(x) + μy
+  moreau_value_grad!(model.Fμy, model.envelope, model.Fμy)  # Fμy <- ∇h_μ(F(x) + μy)
+  jtprod!(model.F, x, model.Fμy, model.jtFv)  # jtFv <- ∇F(x)' * Fμy = gradient of h_μ(F(x) + μy)
   g .+= model.jtFv
   return g
 end
 
-# Solvers that call objgrad() save an evaluation of F on accepted steps
-# and waste a gradient evaluation on rejected steps.
-# A better approach is to cache the value of F(x) in obj() a reuse it in grad!().
-# Perhaps use Memoize.jl on the definition of F?
+# Solvers that call objgrad() save an evaluation of F and a prox evaluation.
+# A better approach is to cache the value of F(x) in obj() and reuse it in grad!().
 NLPModels.objgrad!(model::EnveloptNLPModel, x::AbstractVector, g::AbstractVector) = begin
   fval = obj(model.model, x)
+  grad!(model.model, x, g)
   eval_F!(model, x, model.Fμy)  # Fμy <- F(x)
   @. model.Fμy += model.μ * model.y
-  fval += model.envelope(model.Fμy)
-  grad!(model.model, x, g)
-  prox!(model.ph, model.h, model.Fμy, model.μ)
-  model.Fμy .-= model.ph
-  model.Fμy ./= model.μ
-  jtprod!(model.F, x, model.Fμy, model.jtFv)  # jtFv <- ∇F(x)' * Fμy = gradient of h_μ at F(x) + μy
+  fval += moreau_value_grad!(model.Fμy, model.envelope, model.Fμy)  # Fμy <- ∇h_μ(F(x) + μy)
+  jtprod!(model.F, x, model.Fμy, model.jtFv)  # jtFv <- ∇F(x)' * Fμy = gradient of h_μ(F(x) + μy)
   g .+= model.jtFv
   return fval, g
 end

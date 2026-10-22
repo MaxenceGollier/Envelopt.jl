@@ -1,6 +1,6 @@
 module EnveloptProximalOperatorsExt
 
-using Envelopt
+using Envelopt, NLPModels, NLPModelsModifiers, Printf
 using ProximalOperators
 
 include("Penalty/penalty.jl")

@@ -64,7 +64,7 @@ function envelopt(
   set_multiplier!(env_model, zero(T))  # FIXME: smarter initialization
   set_penalty!(env_model, one(T))      # initial penalty
   Fμy = similar(env_model.Fμy)
-  u = similar(env_model.ph)
+  u = similar(env_model.y)
   y = similar(env_model.y)
 
   dtol = 1.0e-1
