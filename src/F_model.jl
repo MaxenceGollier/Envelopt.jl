@@ -1,9 +1,10 @@
-export AbstractFModel, IdentityFModel, LinearFModel, FunctionFModel
+export AbstractFModel, IdentityFModel
 
 """
     AbstractFModel{T, S} <: AbstractNLPModel{T, S}
 
-Supertype of lightweight models representing a mapping F : ℝⁿ → ℝᵐ for use in `EnveloptNLPModel`.
+Supertype of lightweight models representing a mapping F : ℝⁿ → ℝᵐ
+for use in `EnveloptNLPModel`.
 
 Conceptually, an `AbstractFModel` is the feasibility problem
 
@@ -18,8 +19,11 @@ in `EnveloptNLPModel` valid, so any other `AbstractNLPModel` can still be passed
 
 Concrete subtypes must have fields `meta::NLPModelMeta{T, S}` and `counters::Counters`.
 
-Only the "full" API (`cons!`, `jprod!`, `jtprod!`, `jac_structure!`, `jac_coord!`) is implemented;
-the linear/nonlinear split (`cons_lin!`, `cons_nln!`, ...) is deliberately not used, so `meta.lin` is empty.
+At a minimum, concrete subtypes must implement `cons!` and `jtprod!`, which are the only
+methods `EnveloptNLPModel` calls on `F`. They should also implement `jprod!`, and may implement
+`jac_structure!` and `jac_coord!` if the Jacobian is available in sparse form.
+Only this "full" API is used; the linear/nonlinear split (`cons_lin!`, `cons_nln!`, ...)
+is deliberately not used, so `meta.lin` is empty.
 """
 abstract type AbstractFModel{T, S} <: AbstractNLPModel{T, S} end
 
@@ -79,7 +83,7 @@ Represents the mapping F(x) = x[1:nx], whose Jacobian is [I 0].
 
 `x0` only serves to determine the number of variables and the storage type `S`.
 """
-mutable struct IdentityFModel{T, S} <: AbstractFModel{T, S}
+struct IdentityFModel{T, S} <: AbstractFModel{T, S}
   meta::NLPModelMeta{T, S}
   counters::Counters
   nx::Int
@@ -99,7 +103,12 @@ function NLPModels.cons!(F::IdentityFModel, x::AbstractVector, c::AbstractVector
   return c
 end
 
-function NLPModels.jprod!(F::IdentityFModel, x::AbstractVector, v::AbstractVector, Jv::AbstractVector)
+function NLPModels.jprod!(
+  F::IdentityFModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  Jv::AbstractVector,
+)
   @lencheck F.meta.nvar x v
   @lencheck F.nx Jv
   NLPModels.increment!(F, :neval_jprod)
@@ -107,7 +116,12 @@ function NLPModels.jprod!(F::IdentityFModel, x::AbstractVector, v::AbstractVecto
   return Jv
 end
 
-function NLPModels.jtprod!(F::IdentityFModel, x::AbstractVector, v::AbstractVector, Jtv::AbstractVector)
+function NLPModels.jtprod!(
+  F::IdentityFModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  Jtv::AbstractVector,
+)
   @lencheck F.meta.nvar x Jtv
   @lencheck F.nx v
   NLPModels.increment!(F, :neval_jtprod)
