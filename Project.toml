@@ -20,7 +20,6 @@ NLPModelsModifiers = "e01155f1-5c6f-4375-a9d8-616dd036575f"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 ProximalOperators = "a725b495-10eb-56fe-b38b-717eba820537"
 SolverCore = "ff4d7338-4cf1-434d-91df-b86cb86fb843"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [weakdeps]
 JSOSolvers = "10dff2fc-5484-5881-a0e0-c90441020f8a"
@@ -48,7 +47,6 @@ NLPModelsModifiers = "0.8"
 Printf = "1.10"
 ProximalOperators = "0.16"
 SolverCore = "0.3"
-Test = "1.10"
 julia = "1.10"
 
 [sources]
