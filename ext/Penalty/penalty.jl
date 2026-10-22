@@ -1,7 +1,5 @@
-export exact_penalty_solver
-
 # TODO: return proper stats
-function exact_penalty_solver(
+function Envelopt.exact_penalty_solver(
   nlp::AbstractNLPModel,
   penalty = NormL2;
   verbose = true,
