@@ -9,21 +9,6 @@ for use in `EnveloptNLPModel`.
 Conceptually, an `AbstractFModel` is the feasibility problem
 
     minimize_x 0  subject to  F(x) = 0,
-
-but only the parts of the NLPModels API that `EnveloptNLPModel` relies on are meaningful:
-`cons!` evaluates F(x), and `jprod!` / `jtprod!` compute products with the Jacobian of F.
-The objective is identically zero and no Hessian is available.
-
-Subtyping `AbstractNLPModel` keeps the type constraint `FMODEL <: AbstractNLPModel{T, S}`
-in `EnveloptNLPModel` valid, so any other `AbstractNLPModel` can still be passed as `F`.
-
-Concrete subtypes must have fields `meta::NLPModelMeta{T, S}` and `counters::Counters`.
-
-At a minimum, concrete subtypes must implement `cons!` and `jtprod!`, which are the only
-methods `EnveloptNLPModel` calls on `F`. They should also implement `jprod!`, and may implement
-`jac_structure!` and `jac_coord!` if the Jacobian is available in sparse form.
-Only this "full" API is used; the linear/nonlinear split (`cons_lin!`, `cons_nln!`, ...)
-is deliberately not used, so `meta.lin` is empty.
 """
 abstract type AbstractFModel{T, S} <: AbstractNLPModel{T, S} end
 
