@@ -57,9 +57,9 @@ end
   model = ADNLPModel(x -> (x[1] - 1.0)^2 + 100 * (x[2] - x[1]^2)^2, [-1.2; 1.0])
   h = NormL1(1.0)
   env_model = EnveloptNLPModel(model, h)  # F(x) = x and μ = 1 by default
-  stats, status, u =
+  stats =
     envelopt(env_model, subsolver = IPOPTEnveloptSubSolver(env_model), verbose = false)
-  @test status == :first_order
+  @test stats.status == :first_order
 end
 
 @testitem "simple unconstrained envelopt solve with MadNLP" tags=[:solver, :unconstrained, :madnlp] begin
@@ -67,8 +67,8 @@ end
   model = ADNLPModel(x -> (x[1] - 1.0)^2 + 100 * (x[2] - x[1]^2)^2, [-1.2; 1.0])
   h = NormL1(1.0)
   env_model = EnveloptNLPModel(model, h)  # F(x) = x and μ = 1 by default
-  stats, status, u = envelopt(env_model, verbose = false)
-  @test status == :first_order
+  stats = envelopt(env_model, verbose = false)
+  @test stats.status == :first_order
 end
 
 @testitem "simple unconstrained envelopt solve with Trunk" tags=[:solver, :unconstrained, :trunk] begin
@@ -76,9 +76,9 @@ end
   model = ADNLPModel(x -> (x[1] - 1.0)^2 + 100 * (x[2] - x[1]^2)^2, [-1.2; 1.0])
   h = NormL1(1.0)
   env_model = EnveloptNLPModel(model, h)  # F(x) = x and μ = 1 by default
-  stats, status, u =
+  stats =
     envelopt(env_model; subsolver = TrunkEnveloptSubSolver(env_model), verbose = false)
-  @test status == :first_order
+  @test stats.status == :first_order
 end
 
 @testitem "simple unconstrained envelopt solve with Tron" tags=[:solver, :unconstrained, :tron] begin
@@ -86,9 +86,9 @@ end
   model = ADNLPModel(x -> (x[1] - 1.0)^2 + 100 * (x[2] - x[1]^2)^2, [-1.2; 1.0])
   h = NormL1(1.0)
   env_model = EnveloptNLPModel(model, h)  # F(x) = x and μ = 1 by default
-  stats, status, u =
+  stats =
     envelopt(env_model; subsolver = TronEnveloptSubSolver(env_model), verbose = false)
-  @test status == :first_order
+  @test stats.status == :first_order
 end
 
 @testitem "simple bound-constrained envelopt solve with Tron" tags=[
@@ -104,9 +104,9 @@ end
   model = hs1()
   h = NormL1(1.0)
   env_model = EnveloptNLPModel(model, h)  # F(x) = x and μ = 1 by default
-  stats, status, u =
+  stats =
     envelopt(env_model; subsolver = TronEnveloptSubSolver(env_model), verbose = false)
-  @test status == :first_order
+  @test stats.status == :first_order
 end
 
 @testitem "test constrained problem with MadNLP" tags=[:solvers, :constrained, :madnlp] begin
@@ -114,8 +114,8 @@ end
   model = hs13()
   h = NormL1(1.0)
   env_model = EnveloptNLPModel(model, h)  # F(x) = x and μ = 1 by default
-  stats, status, u = envelopt(env_model, verbose = false)
-  @test status == :first_order
+  stats = envelopt(env_model, verbose = false)
+  @test stats.status == :first_order
 end
 
 @testitem "test constrained problem with IPOPT" tags=[:solvers, :constrained, :ipopt] begin
@@ -127,9 +127,9 @@ end
   model = hs13()
   h = NormL1(1.0)
   env_model = EnveloptNLPModel(model, h)  # F(x) = x and μ = 1 by default
-  stats, status, u =
+  stats =
     envelopt(env_model, subsolver = IPOPTEnveloptSubSolver(env_model), verbose = false)
-  @test status == :first_order
+  @test stats.status == :first_order
 end
 
 @testitem "test complementarity problem with NCL" tags=[:solvers, :constrained, :mpcc] begin
@@ -147,6 +147,40 @@ end
   ncl_model = NCLModel(model)
   h = NormL1(1.0)
   env_model = EnveloptNLPModel(ncl_model, h)  # F(x, r) = x and μ = 1 by default
-  stats, status, u = envelopt(env_model, verbose = false)
-  @test status == :first_order
+  stats = envelopt(env_model, verbose = false)
+  @test stats.status == :first_order
+end
+
+@testitem "solve! with a preallocated EnveloptSolver" tags=[:solver, :unconstrained, :madnlp] begin
+  using ADNLPModels, NLPModels, ProximalOperators, SolverCore
+  model = ADNLPModel(x -> (x[1] - 1.0)^2 + 100 * (x[2] - x[1]^2)^2, [-1.2; 1.0])
+  h = NormL1(1.0)
+  env_model = EnveloptNLPModel(model, h)  # F(x) = x and μ = 1 by default
+  stats_ref = envelopt(env_model, verbose = false)
+  @test stats_ref.status == :first_order
+  @test get_x0(env_model) == [-1.2; 1.0]  # the initial guess is restored
+
+  # solving again with a preallocated workspace gives the same results
+  solver = EnveloptSolver(env_model)
+  stats = GenericExecutionStats(env_model)
+  for _ = 1:2
+    solve!(solver, env_model, stats, verbose = false)
+    @test stats.status == :first_order
+    @test stats.solution == stats_ref.solution
+    @test stats.objective == stats_ref.objective
+    @test stats.iter == stats_ref.iter
+    @test stats.solver_specific[:inner_iter] == stats_ref.solver_specific[:inner_iter]
+    @test stats.solver_specific[:u] == stats_ref.solver_specific[:u]
+  end
+end
+
+@testitem "envelopt callback can stop the solver" tags=[:solver, :unconstrained, :madnlp] begin
+  using ADNLPModels, ProximalOperators, SolverCore
+  model = ADNLPModel(x -> (x[1] - 1.0)^2 + 100 * (x[2] - x[1]^2)^2, [-1.2; 1.0])
+  h = NormL1(1.0)
+  env_model = EnveloptNLPModel(model, h)
+  cb = (nlp, solver, stats) -> (stats.iter ≥ 1 && set_status!(stats, :user))
+  stats = envelopt(env_model, verbose = false, callback = cb)
+  @test stats.status == :user
+  @test stats.iter == 1
 end

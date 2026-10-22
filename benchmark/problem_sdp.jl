@@ -90,7 +90,7 @@ function example_4_Ramana_JuMP()
   return prob
 end
 
-function process_output(stats, status, inner_iter)
+function process_output(stats, stats.status, stats.solver_specific[:inner_iter])
   if status != "first_order"
     @warn "failed problem"
   end
@@ -114,12 +114,12 @@ display(x)
 
 # solve with Envelopt+Ipopt
 emodel = example_4_Ramana()
-stats, status, u, inner_iter =
+stats =
   envelopt(emodel, dtol_min = TOL, ptol_min = TOL, subsolver = IPOPTEnveloptSubSolver(emodel))
-process_output(stats, status, inner_iter)
+process_output(stats, stats.status, stats.solver_specific[:inner_iter])
 
 # solve with Envelopt+MadNLP
 emodel = example_4_Ramana()
-stats, status, u, inner_iter =
+stats =
   envelopt(emodel, dtol_min = TOL, ptol_min = TOL, subsolver = MadNLPEnveloptSubSolver(emodel))
-process_output(stats, status, inner_iter)
+process_output(stats, stats.status, stats.solver_specific[:inner_iter])
