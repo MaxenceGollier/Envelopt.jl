@@ -105,6 +105,23 @@ For advanced usage, first preallocate the workspace and then call `solve!`:
 - `indent::String = ""`: prefix of each log line;
 - `callback = (args...) -> nothing`: see below.
 
+# Regularized problems
+
+When RegularizedOptimization.jl and RegularizedProblems.jl are loaded, the problem
+
+    minimize f(x) + h(F(x)) + r(x),
+
+where r is proper, lower semi-continuous and prox-bounded, can be passed as a `RegularizedNLPModel`
+`reg_nlp` with `reg_nlp.model::EnveloptNLPModel` and regularizer `reg_nlp.h = r`:
+
+    stats = envelopt(reg_nlp; kwargs...)
+
+    solver = EnveloptSolver(reg_nlp; subsolver = R2NEnveloptSubSolver(reg_nlp))
+    stats = EnveloptExecutionStats(reg_nlp)
+    solve!(solver, reg_nlp, stats; kwargs...)
+
+The subproblem solver must be [`R2NEnveloptSubSolver`](@ref) (the default) or [`R2EnveloptSubSolver`](@ref).
+
 # Output
 
 The value returned is an [`EnveloptExecutionStats`](@ref), which wraps a `GenericExecutionStats` (see `SolverCore.jl`), where
