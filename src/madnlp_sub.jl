@@ -3,9 +3,12 @@ export MadNLPEnveloptSubSolver
 using MadNLP
 
 # MadNLP subproblem solver
-mutable struct MadNLPEnveloptSubSolver <: AbstractEnveloptSubSolver
-  solver::MadNLPSolver
-  stats::MadNLP.MadNLPExecutionStats
+mutable struct MadNLPEnveloptSubSolver{
+  SOLVER <: MadNLPSolver,
+  STATS <: MadNLP.MadNLPExecutionStats
+} <: AbstractEnveloptSubSolver
+  solver::SOLVER
+  stats::STATS
   name::String
 end
 

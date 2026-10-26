@@ -153,8 +153,6 @@ function SolverCore.solve!(
 ) where {T, V}
   SolverCore.reset!(stats)
   NLPModels.reset!(env_model)
-  NLPModels.reset!(env_model.model) # TODO NLPModels.reset! should reset the model and its submodels recursively.
-  NLPModels.reset!(env_model.F)
 
   f, h = env_model.model, env_model.h
   subsolver = solver.subsolver
@@ -202,22 +200,18 @@ function SolverCore.solve!(
   end
 
   set_objective!(stats, fk + hk)
-  set_solver_specific!(stats, :smooth_obj, fk)
-  set_solver_specific!(stats, :nonsmooth_obj, hk)
-  set_solver_specific!(stats, :inner_iter, tot_inner_iter)
   set_status!(stats, stats.iter ≥ max_outer ? :max_iter : :unknown)
 
   callback(env_model, solver, stats)
 
   done = stats.status != :unknown
 
-  # FIXME: smarter stopping condition
   while !done
+
     # solve subproblem with xk as initial guess
     subsolver(env_model, xk, stats.iter; tol = dtol)
     set_iter!(stats, stats.iter + 1)
     tot_inner_iter += substats.iter
-    set_solver_specific!(stats, :inner_iter, tot_inner_iter)
 
     if failed(substats)
       verbose && @error "subproblem solver fails with" substats.status
@@ -233,6 +227,8 @@ function SolverCore.solve!(
     @. dk = Fk - uk
     lift_feasibility = norm(dk)
     kkt = max(substats.dual_feas, substats.primal_feas)
+
+    set_residuals!(stats, substats.primal_feas, substats.dual_feas)
 
     feasibility = lift_feasibility
     if isa(f, NCLModel)
@@ -273,8 +269,6 @@ function SolverCore.solve!(
     env_val = obj(env_model, fk, Fμyk)
 
     set_objective!(stats, fk + hk)
-    set_solver_specific!(stats, :smooth_obj, fk)
-    set_solver_specific!(stats, :nonsmooth_obj, hk)
     set_time!(stats, time() - start_time)
 
     if verbose
@@ -318,9 +312,6 @@ function SolverCore.solve!(
     # stats has no storage for bound multipliers if env_model has no bounds
     set_bounds_multipliers!(stats, substats.multipliers_L, substats.multipliers_U)
   end
-  u = get!(() -> similar(uk), stats.solver_specific, :u)  # only allocate on first use of stats
-  u .= uk
-  set_solver_specific!(stats, :u, u)
   set_time!(stats, time() - start_time)
   return stats
 end

@@ -140,12 +140,10 @@ function EnveloptNLPModel(
   EnveloptNLPModel(model, Fmodel, h; kwargs...)
 end
 
-# Why does Julia complain about this?
-# NLPModels.reset!(env_model::EnveloptNLPModel) = begin
-#   NLPModels.reset!(env_model.model)
-#   NLPModels.reset!(env_model.F)
-#   env_model
-# end
+function NLPModels.reset!(env_model::EnveloptNLPModel)
+  NLPModels.reset!(env_model.model)
+  NLPModels.reset!(env_model.F)
+end
 
 @default_counters EnveloptNLPModel model
 
