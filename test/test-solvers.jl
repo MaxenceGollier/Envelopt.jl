@@ -162,16 +162,72 @@ end
 
   # solving again with a preallocated workspace gives the same results
   solver = EnveloptSolver(env_model)
-  stats = GenericExecutionStats(env_model)
+  stats = EnveloptExecutionStats(env_model)
   for _ = 1:2
     solve!(solver, env_model, stats, verbose = false)
     @test stats.status == :first_order
     @test stats.solution == stats_ref.solution
     @test stats.objective == stats_ref.objective
     @test stats.iter == stats_ref.iter
-    @test stats.solver_specific[:inner_iter] == stats_ref.solver_specific[:inner_iter]
-    @test stats.solver_specific[:u] == stats_ref.solver_specific[:u]
+    @test stats.inner_iter == stats_ref.inner_iter
+    @test stats.u == stats_ref.u
+    @test stats.smooth_obj + stats.nonsmooth_obj == stats.objective
   end
+end
+
+@testitem "EnveloptExecutionStats is type stable and forwards to GenericExecutionStats" tags=[
+  :solver,
+  :unconstrained,
+  :madnlp,
+] begin
+  using ADNLPModels, NLPModels, ProximalOperators, SolverCore, Test
+  model = ADNLPModel(x -> (x[1] - 1.0)^2 + 100 * (x[2] - x[1]^2)^2, [-1.2; 1.0])
+  h = NormL1(1.0)
+  env_model = EnveloptNLPModel(model, h)
+  stats = EnveloptExecutionStats(env_model)
+  @test stats.stats isa GenericExecutionStats
+
+  # field access is concretely typed
+  get_u(s) = s.u
+  get_inner_iter(s) = s.inner_iter
+  get_smooth_obj(s) = s.smooth_obj
+  get_status(s) = s.status
+  get_solution(s) = s.solution
+  get_objective(s) = s.objective
+  @inferred get_u(stats)
+  @inferred get_inner_iter(stats)
+  @inferred get_smooth_obj(stats)
+  @inferred get_status(stats)
+  @inferred get_solution(stats)
+  @inferred get_objective(stats)
+
+  # setters and reset! are forwarded
+  set_status!(stats, :user)
+  @test stats.status == :user
+  set_iter!(stats, 3)
+  @test stats.iter == 3
+  stats.inner_iter = 7
+  @test stats.inner_iter == 7
+  SolverCore.reset!(stats)
+  @test stats.inner_iter == 0
+  @test !stats.status_reliable
+
+  # updating the Envelopt-specific fields does not allocate
+  function update!(s, fk, hk, uk)
+    s.inner_iter += 1
+    s.smooth_obj = fk
+    s.nonsmooth_obj = hk
+    copyto!(s.u, uk)
+    return s
+  end
+  uk = ones(2)
+  update!(stats, 1.0, 2.0, uk)
+  @test (@allocated update!(stats, 1.0, 2.0, uk)) == 0
+
+  # printing includes the Envelopt-specific fields
+  io = IOBuffer()
+  print(io, stats)
+  @test occursin("inner iterations", String(take!(io)))
 end
 
 @testitem "envelopt callback can stop the solver" tags=[:solver, :unconstrained, :madnlp] begin

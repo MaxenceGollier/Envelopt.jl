@@ -7,6 +7,8 @@ abstract type AbstractEnveloptSubSolver end
 name(sub::AbstractEnveloptSubSolver) = sub.name
 failed(stats::GenericExecutionStats) = stats.status != :first_order
 first_order(stats::GenericExecutionStats) = stats.status == :first_order
+failed(stats::EnveloptExecutionStats) = failed(stats.stats)
+first_order(stats::EnveloptExecutionStats) = first_order(stats.stats)
 include("madnlp_sub.jl")
 
 """
@@ -88,7 +90,7 @@ The subproblems are solved with a solver chosen by the user using a quasi-Newton
 For advanced usage, first preallocate the workspace and then call `solve!`:
 
     solver = EnveloptSolver(env_model; subsolver = MadNLPEnveloptSubSolver(env_model))
-    stats = GenericExecutionStats(env_model)
+    stats = EnveloptExecutionStats(env_model)
     solve!(solver, env_model, stats; kwargs...)
 
 # Keyword arguments
@@ -105,14 +107,14 @@ For advanced usage, first preallocate the workspace and then call `solve!`:
 
 # Output
 
-The value returned is a `GenericExecutionStats`, see `SolverCore.jl`, where
+The value returned is an [`EnveloptExecutionStats`](@ref), which wraps a `GenericExecutionStats` (see `SolverCore.jl`), where
 
 - `stats.iter` is the number of outer iterations, i.e., of subproblems solved;
 - `stats.objective` is f(x) + h(u);
 - `stats.dual_feas`, `stats.primal_feas`, `stats.multipliers`, `stats.multipliers_L` and `stats.multipliers_U` are those of the last subproblem;
-- `stats.solver_specific[:u]` is u = prox_{μh}(F(x) + μ y);
-- `stats.solver_specific[:inner_iter]` is the total number of iterations of the subproblem solver;
-- `stats.solver_specific[:smooth_obj]` and `stats.solver_specific[:nonsmooth_obj]` are f(x) and h(u).
+- `stats.u` is u = prox_{μh}(F(x) + μ y);
+- `stats.inner_iter` is the total number of iterations of the subproblem solver;
+- `stats.smooth_obj` and `stats.nonsmooth_obj` are f(x) and h(u).
 
 On return, `get_x0(env_model)` and `get_y0(env_model)` are restored to their values on entry.
 
@@ -137,14 +139,14 @@ function envelopt(
 end
 
 function SolverCore.solve!(solver::EnveloptSolver, env_model::EnveloptNLPModel; kwargs...)
-  stats = GenericExecutionStats(env_model)
+  stats = EnveloptExecutionStats(env_model)
   return solve!(solver, env_model, stats; kwargs...)
 end
 
 function SolverCore.solve!(
   solver::EnveloptSolver{T, V},
   env_model::EnveloptNLPModel{T, V},
-  stats::GenericExecutionStats{T, V};
+  stats::EnveloptExecutionStats{T, V};
   callback = (args...) -> nothing,
   x::V = get_x0(env_model),
   y::V = get_y0(env_model),
@@ -179,7 +181,7 @@ function SolverCore.solve!(
 
   dtol = 1.0e-1
   ptol = 1.0e-1
-  tot_inner_iter = 0
+  stats.inner_iter = 0
 
   set_iter!(stats, 0)
   start_time = time()
@@ -203,6 +205,8 @@ function SolverCore.solve!(
   end
 
   set_objective!(stats, fk + hk)
+  stats.smooth_obj = fk
+  stats.nonsmooth_obj = hk
   set_status!(stats, stats.iter ≥ max_outer ? :max_iter : :unknown)
 
   callback(env_model, solver, stats)
@@ -214,7 +218,7 @@ function SolverCore.solve!(
     # solve subproblem with xk as initial guess
     subsolver(env_model, xk, stats.iter; tol = dtol)
     set_iter!(stats, stats.iter + 1)
-    tot_inner_iter += substats.iter
+    stats.inner_iter += substats.iter
 
     if failed(substats)
       verbose && @error "subproblem solver fails with" substats.status
@@ -272,6 +276,8 @@ function SolverCore.solve!(
     env_val = obj(env_model, fk, Fμyk)
 
     set_objective!(stats, fk + hk)
+    stats.smooth_obj = fk
+    stats.nonsmooth_obj = hk
     set_time!(stats, time() - start_time)
 
     if verbose
@@ -302,7 +308,8 @@ function SolverCore.solve!(
   if stats.status == :exception
     # Report the last iterate of the subproblem solver, as before the workspace was preallocated.
     set_solution!(stats, substats.solution)
-    set_objective!(stats, obj(f, stats.solution) + hk)
+    stats.smooth_obj = obj(f, stats.solution)
+    set_objective!(stats, stats.smooth_obj + hk)
   else
     set_solution!(stats, xk)
   end
@@ -312,6 +319,7 @@ function SolverCore.solve!(
     # stats has no storage for bound multipliers if env_model has no bounds
     set_bounds_multipliers!(stats, substats.multipliers_L, substats.multipliers_U)
   end
+  copyto!(stats.u, uk)
   set_time!(stats, time() - start_time)
   return stats
 end

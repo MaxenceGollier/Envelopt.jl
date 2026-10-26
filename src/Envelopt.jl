@@ -15,6 +15,7 @@ using SolverCore
 include("moreau_envelope.jl")
 include("F_model.jl")
 include("envelopt_model.jl")
+include("envelopt_stats.jl")
 include("envelopt_solver.jl")
 
 include("eq_feasibility.jl")

@@ -87,7 +87,7 @@ function Envelopt.exact_penalty_solver(
       indent = "  ",
     )
 
-    nlp_iter = stats.solver_specific[:inner_iter]
+    nlp_iter = stats.inner_iter
 
     # check progress towards feasibility
     step_norm = pfeas_measure(stats.solution - x)

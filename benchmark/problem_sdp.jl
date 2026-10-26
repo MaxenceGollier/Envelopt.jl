@@ -90,13 +90,13 @@ function example_4_Ramana_JuMP()
   return prob
 end
 
-function process_output(stats, stats.status, stats.solver_specific[:inner_iter])
-  if status != "first_order"
+function process_output(stats)
+  if stats.status != :first_order
     @warn "failed problem"
   end
   display(stats.solution)
   println("ENV iterations $(stats.iter)")
-  println("NLP iterations $(inner_iter)")
+  println("NLP iterations $(stats.inner_iter)")
 end
 
 Random.seed!(123) # seed for reproducibility
@@ -114,12 +114,11 @@ display(x)
 
 # solve with Envelopt+Ipopt
 emodel = example_4_Ramana()
-stats =
-  envelopt(emodel, dtol_min = TOL, ptol_min = TOL, subsolver = IPOPTEnveloptSubSolver(emodel))
-process_output(stats, stats.status, stats.solver_specific[:inner_iter])
+stats = envelopt(emodel, dtol_min = TOL, ptol_min = TOL, subsolver = IPOPTEnveloptSubSolver(emodel))
+process_output(stats)
 
 # solve with Envelopt+MadNLP
 emodel = example_4_Ramana()
 stats =
   envelopt(emodel, dtol_min = TOL, ptol_min = TOL, subsolver = MadNLPEnveloptSubSolver(emodel))
-process_output(stats, stats.status, stats.solver_specific[:inner_iter])
+process_output(stats)

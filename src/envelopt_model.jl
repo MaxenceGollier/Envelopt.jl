@@ -140,9 +140,12 @@ function EnveloptNLPModel(
   EnveloptNLPModel(model, Fmodel, h; kwargs...)
 end
 
-function NLPModels.reset!(env_model::EnveloptNLPModel)
-  NLPModels.reset!(env_model.model)
+# `@default_counters` below already defines `NLPModels.reset!(::EnveloptNLPModel)`, which resets
+# `env_model.model` and then calls `reset_data!`, so we only reset `env_model.F` here.
+# Defining `reset!` ourselves would overwrite that method and break precompilation.
+function NLPModels.reset_data!(env_model::EnveloptNLPModel)
   NLPModels.reset!(env_model.F)
+  return env_model
 end
 
 @default_counters EnveloptNLPModel model
