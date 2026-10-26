@@ -17,8 +17,11 @@ Preallocate the workspace used by [`envelopt`](@ref) to solve `env_model`, so th
 
 The subproblem solver `subsolver` is stored in the workspace and reused across calls.
 """
-mutable struct EnveloptSolver{T <: Real, V <: AbstractVector{T}, Sub <: AbstractEnveloptSubSolver} <:
-               AbstractOptimizationSolver
+mutable struct EnveloptSolver{
+  T <: Real,
+  V <: AbstractVector{T},
+  Sub <: AbstractEnveloptSubSolver,
+} <: AbstractOptimizationSolver
   xk::V    # current iterate
   x0::V    # copy of get_x0(env_model), restored at the end of solve!
   y0::V    # copy of get_y0(env_model), restored at the end of solve!
@@ -279,10 +282,7 @@ function SolverCore.solve!(
     dual_feasible = kkt ≤ dtol_min
     primal_feasible = feasibility ≤ ptol_min
     stationary = dual_feasible && primal_feasible
-    set_status!(
-      stats,
-      stationary ? :first_order : (stats.iter ≥ max_outer ? :max_iter : :unknown),
-    )
+    set_status!(stats, stationary ? :first_order : (stats.iter ≥ max_outer ? :max_iter : :unknown))
 
     callback(env_model, solver, stats)
 

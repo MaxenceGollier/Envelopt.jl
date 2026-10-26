@@ -5,7 +5,7 @@ using MadNLP
 # MadNLP subproblem solver
 mutable struct MadNLPEnveloptSubSolver{
   SOLVER <: MadNLPSolver,
-  STATS <: MadNLP.MadNLPExecutionStats
+  STATS <: MadNLP.MadNLPExecutionStats,
 } <: AbstractEnveloptSubSolver
   solver::SOLVER
   stats::STATS
