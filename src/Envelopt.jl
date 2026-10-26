@@ -62,6 +62,7 @@ export R2NEnveloptSubSolver, R2EnveloptSubSolver
 
 """
     R2NEnveloptSubSolver(env_model::EnveloptNLPModel, regularizer; kwargs...)
+    R2NEnveloptSubSolver(reg_nlp::RegularizedNLPModel; kwargs...)
 
 An Envelopt subproblem solver based on R2N from RegularizedOptimization.jl.
 Together with [`envelopt`](@ref), it solves
@@ -76,6 +77,8 @@ Each subproblem
     minimize f(x) + h_μ(F(x) + μy) + regularizer(x)
 
 is solved by R2N, which treats `regularizer` through its proximal operator.
+In the second form, `reg_nlp.model` is `env_model`, and `reg_nlp.h` and `reg_nlp.selected`
+are `regularizer` and `selected`.
 `env_model` may have bounds but no constraints c(x) ∈ C; all constraints must be part of F.
 
 This solver is defined in an extension: load RegularizedOptimization.jl and
@@ -88,7 +91,7 @@ RegularizedProblems.jl to use it.
   it is reset at the beginning of each subproblem solve;
 * `mem::Int = 5`: memory of the quasi-Newton approximation;
 * `subsolver = R2Solver`, `m_monotone::Int = 1`: passed to `R2NSolver`;
-* `selected = 1:nvar`: the variables to which `regularizer` applies.
+* `selected = 1:nvar`: the variables to which `regularizer` applies (first form only).
 """
 function R2NEnveloptSubSolver(args...; kwargs...)
   error(
@@ -98,6 +101,7 @@ end
 
 """
     R2EnveloptSubSolver(env_model::EnveloptNLPModel, regularizer; kwargs...)
+    R2EnveloptSubSolver(reg_nlp::RegularizedNLPModel)
 
 An Envelopt subproblem solver based on R2 from RegularizedOptimization.jl,
 a first-order quadratic regularization method that only uses the objective and gradient
@@ -110,7 +114,7 @@ RegularizedProblems.jl to use it.
 
 ## Keyword arguments
 
-* `selected = 1:nvar`: the variables to which `regularizer` applies.
+* `selected = 1:nvar`: the variables to which `regularizer` applies (first form only).
 """
 function R2EnveloptSubSolver(args...; kwargs...)
   error(
