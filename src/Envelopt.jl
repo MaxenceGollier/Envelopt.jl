@@ -76,7 +76,7 @@ Each subproblem
     minimize f(x) + h_μ(F(x) + μy) + regularizer(x)
 
 is solved by R2N, which treats `regularizer` through its proximal operator.
-`env_model` must not have constraints c(x) ∈ C; all constraints must be part of F.
+`env_model` may have bounds but no constraints c(x) ∈ C; all constraints must be part of F.
 
 This solver is defined in an extension: load RegularizedOptimization.jl and
 RegularizedProblems.jl to use it.
@@ -85,12 +85,10 @@ RegularizedProblems.jl to use it.
 
 * `hessian_approximation::Symbol = :lbfgs`: the quasi-Newton approximation of the Hessian
   of the whole smooth objective used by R2N, either `:lbfgs` or `:lsr1`;
+  it is reset at the beginning of each subproblem solve;
 * `mem::Int = 5`: memory of the quasi-Newton approximation;
 * `subsolver = R2Solver`, `m_monotone::Int = 1`: passed to `R2NSolver`;
 * `selected = 1:nvar`: the variables to which `regularizer` applies.
-
-Any other keyword argument is passed to R2N at each subproblem solve,
-e.g., `max_iter`, `verbose` or `σmin`.
 """
 function R2NEnveloptSubSolver(args...; kwargs...)
   error(
@@ -113,9 +111,6 @@ RegularizedProblems.jl to use it.
 ## Keyword arguments
 
 * `selected = 1:nvar`: the variables to which `regularizer` applies.
-
-Any other keyword argument is passed to R2 at each subproblem solve,
-e.g., `max_iter`, `verbose` or `σmin`.
 """
 function R2EnveloptSubSolver(args...; kwargs...)
   error(

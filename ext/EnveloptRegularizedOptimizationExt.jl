@@ -1,10 +1,8 @@
 module EnveloptRegularizedOptimizationExt
 
 using Envelopt, NLPModels, NLPModelsModifiers, SolverCore
-using RegularizedOptimization
-using RegularizedProblems
+using RegularizedOptimization, RegularizedProblems
 
-include("RegularizedOptimization/regopt_sub.jl")
 include("RegularizedOptimization/r2.jl")
 include("RegularizedOptimization/r2n.jl")
 
