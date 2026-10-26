@@ -1,7 +1,10 @@
 # TRON subproblem solver
-mutable struct TronEnveloptSubSolver <: Envelopt.AbstractEnveloptSubSolver
-  solver::TronSolver
-  stats::GenericExecutionStats
+mutable struct TronEnveloptSubSolver{
+  SOLVER <: TronSolver,
+  STATS <: GenericExecutionStats
+} <: Envelopt.AbstractEnveloptSubSolver
+  solver::SOLVER
+  stats::STATS
   name::String
 end
 

@@ -222,12 +222,11 @@ env_model = EnveloptNLPModel(model, Fmodel, h)
 
 # TODO add callback to monitor SNR as in the PIPA paper
 TOL = 1e-3
-runtime = @elapsed stats, status, u, tot_inner_iter =
-  envelopt(env_model, verbose = true, dtol_min = TOL, ptol_min = TOL)
+runtime = @elapsed stats = envelopt(env_model, verbose = true, dtol_min = TOL, ptol_min = TOL)
 display(stats)
 display(runtime)
 display(stats.iter)
-display(tot_inner_iter)
+display(stats.inner_iter)
 
 function save_fig_solution(stats)
   xtxg = stats.solution

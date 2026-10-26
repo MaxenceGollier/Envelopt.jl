@@ -46,7 +46,7 @@ end
     model = ADNLPModel(x -> (x[1] - 1.0)^2 + 100 * (x[2] - x[1]^2)^2, [-1.2; 1.0])
     h = NormL1(1.0)
     env_model = EnveloptNLPModel(model, h)  # F(x) = x and μ = 1 by default
-    stats, status, u =
+    stats =
       envelopt(env_model; subsolver = KnitroEnveloptSubSolver(env_model), verbose = false)
     @test Envelopt.first_order(stats)
   end
@@ -63,7 +63,7 @@ end
     model = hs1()
     h = NormL1(1.0)
     env_model = EnveloptNLPModel(model, h)  # F(x) = x and μ = 1 by default
-    stats, status, u =
+    stats =
       envelopt(env_model; subsolver = KnitroEnveloptSubSolver(env_model), verbose = false)
     @test Envelopt.first_order(stats)
   end
@@ -80,7 +80,7 @@ end
     model = hs13()
     h = NormL1(1.0)
     env_model = EnveloptNLPModel(model, h)  # F(x) = x and μ = 1 by default
-    stats, status, u =
+    stats =
       envelopt(env_model; subsolver = KnitroEnveloptSubSolver(env_model), verbose = false)
     @test Envelopt.first_order(stats)
   end

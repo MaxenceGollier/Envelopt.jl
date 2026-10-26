@@ -78,7 +78,7 @@ function Envelopt.exact_penalty_solver(
     env_model = EnveloptNLPModel(model, Fmodel, h, x0 = x)
 
     # call solver
-    stats, status, u, nlp_iter = envelopt(
+    stats = envelopt(
       env_model,
       verbose = sub_verbose,
       subsolver = EnveloptSubSolver(env_model),
@@ -86,6 +86,8 @@ function Envelopt.exact_penalty_solver(
       ptol_min = subtol,
       indent = "  ",
     )
+
+    nlp_iter = stats.inner_iter
 
     # check progress towards feasibility
     step_norm = pfeas_measure(stats.solution - x)

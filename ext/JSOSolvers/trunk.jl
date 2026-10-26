@@ -1,7 +1,10 @@
 # Trunk subproblem solver
-mutable struct TrunkEnveloptSubSolver <: Envelopt.AbstractEnveloptSubSolver
-  solver::TrunkSolver
-  stats::GenericExecutionStats
+mutable struct TrunkEnveloptSubSolver{
+  SOLVER <: TrunkSolver,
+  STATS <: GenericExecutionStats
+} <: Envelopt.AbstractEnveloptSubSolver
+  solver::SOLVER
+  stats::STATS
   name::String
 end
 

@@ -116,13 +116,12 @@ for i = 1:ntrials
   for subsolver in subsolvers
     key = subsolver_to_key(subsolver)
     env_model = EnveloptNLPModel(model, h)
-    stats, status, u, inner_iter =
-      envelopt(env_model, dtol_min = TOL, ptol_min = TOL, subsolver = subsolver(env_model))
+    stats = envelopt(env_model, dtol_min = TOL, ptol_min = TOL, subsolver = subsolver(env_model))
 
     res[key].iter[i] = stats.iter
-    res[key].inner_iter[i] = inner_iter
-    if status == "first_order"
-      umat = reshape(u, (N, N))
+    res[key].inner_iter[i] = stats.inner_iter
+    if stats.status == :first_order
+      umat = reshape(stats.u, (N, N))
       rank_u = rank(umat)
       println("Rank of u = $(rank_u)")
       res[key].rank_u[i] = rank_u

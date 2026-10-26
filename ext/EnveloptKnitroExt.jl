@@ -4,9 +4,12 @@ using Envelopt, NLPModels, SolverCore
 using NLPModelsKnitro
 
 # Knitro subproblem solver
-mutable struct KnitroEnveloptSubSolver <: Envelopt.AbstractEnveloptSubSolver
-  solver::KnitroSolver
-  stats::GenericExecutionStats
+mutable struct KnitroEnveloptSubSolver{
+  SOLVER <: KnitroSolver,
+  STATS <: GenericExecutionStats
+} <: Envelopt.AbstractEnveloptSubSolver
+  solver::SOLVER
+  stats::STATS
   name::String
   z::Vector{Float64}  # KNITRO wants a single vector of dual variables
 end
